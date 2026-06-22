@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador Blogger APK Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">APK</div>
+        <div>
+          <h1>Gerador Blogger</h1>
+          <p>APK Pro</p>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#formulario" class="nav-item active">Formulário</a>
+        <a href="#importacao" class="nav-item">Importação</a>
+        <a href="#preview" class="nav-item">Pré-visualização</a>
+        <a href="#seo" class="nav-item">SEO</a>
+        <a href="#saida" class="nav-item">Saída HTML</a>
+      </nav>
+      <div class="sidebar-footer">
+        <p>Pronto para Netlify e GitHub Pages</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <h2>Gerador de Postagens Blogger</h2>
+        <p>Crie postagens HTML profissionais para APK Mod com importação automática de dados.</p>
+      </header>
+
+      <section id="importacao" class="card">
+        <div class="card-header">
+          <h3>Importação Automática</h3>
+          <p>Cole uma URL da Google Play, APKPure, APKMirror, HappyMod ou Aptoide.</p>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="urlImportacao">URL da Google Play / APKPure / APKMirror / HappyMod / Aptoide</label>
+            <input type="url" id="urlImportacao" placeholder="https://play.google.com/store/apps/details?id=com.spotify.music">
+          </div>
+          <div class="btn-group">
+            <button type="button" id="btnImportar" class="btn btn-primary">Importar Dados</button>
+            <button type="button" id="btnImportarGooglePlay" class="btn btn-secondary">Importar Google Play</button>
+          </div>
+          <div id="importStatus" class="status-message" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="formulario" class="card">
+        <div class="card-header">
+          <h3>Formulário</h3>
+          <p>Preencha os dados ou importe automaticamente de uma loja.</p>
+        </div>
+        <div class="card-body">
+          <form id="apkForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required>
+              </div>
+
+              <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo">
+                  <option value="Aplicativo">Aplicativo</option>
+                  <option value="Jogo">Jogo</option>
+                </select>
+              </div>
+
+              <div class="form-group form-group-full">
+                <label for="icone">Ícone (URL)</label>
+                <input type="url" id="icone" name="icone">
+              </div>
+
+              <div class="form-group">
+                <label for="categoria">Categoria</label>
+                <input type="text" id="categoria" name="categoria">
+              </div>
+
+              <div class="form-group">
+                <label for="avaliacao">Avaliação</label>
+                <input type="text" id="avaliacao" name="avaliacao" placeholder="4.5">
+              </div>
+
+              <div class="form-group">
+                <label for="versao">Versão</label>
+                <input type="text" id="versao" name="versao">
+              </div>
+
+              <div class="form-group">
+                <label for="sistema">Sistema</label>
+                <input type="text" id="sistema" name="sistema" placeholder="Android 5.0+">
+              </div>
+
+              <div class="form-group">
+                <label for="mod">Mod</label>
+                <input type="text" id="mod" name="mod" placeholder="Premium Unlocked">
+              </div>
+
+              <div class="form-group">
+                <label for="atualizacao">Atualização</label>
+                <input type="text" id="atualizacao" name="atualizacao">
+              </div>
+
+              <div class="form-group form-group-full">
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" name="descricao" rows="5"></textarea>
+              </div>
+
+              <div class="form-group form-group-full">
+                <label for="download">Link Download</label>
+                <input type="url" id="download" name="download">
+              </div>
+
+              <div class="form-group">
+                <label for="screenshot1">Screenshot 1</label>
+                <input type="url" id="screenshot1" name="screenshot1">
+              </div>
+
+              <div class="form-group">
+                <label for="screenshot2">Screenshot 2</label>
+                <input type="url" id="screenshot2" name="screenshot2">
+              </div>
+
+              <div class="form-group">
+                <label for="screenshot3">Screenshot 3</label>
+                <input type="url" id="screenshot3" name="screenshot3">
+              </div>
+
+              <div class="form-group form-group-full">
+                <label for="recursosMod">Recursos do Mod (um por linha)</label>
+                <textarea id="recursosMod" name="recursosMod" rows="4" placeholder="Premium&#10;Sem anúncios&#10;Moedas infinitas"></textarea>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="preview" class="card">
+        <div class="card-header">
+          <h3>Pré-visualização em Tempo Real</h3>
+        </div>
+        <div class="card-body">
+          <div class="preview-box">
+            <div class="preview-hero">
+              <img id="previewIcon" class="preview-icon" src="" alt="Ícone" onerror="this.style.display='none'">
+              <div class="preview-info">
+                <h4 id="previewTitle">Nome do App</h4>
+                <span id="previewCategory" class="preview-tag">Categoria</span>
+                <div class="preview-meta">
+                  <span id="previewVersao">v1.0</span>
+                  <span id="previewAvaliacao">4.5 ★</span>
+                </div>
+                <a id="previewDownload" class="preview-btn" href="#" target="_blank" rel="nofollow noopener">Baixar Apk</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="seo" class="card">
+        <div class="card-header">
+          <h3>SEO Automático</h3>
+        </div>
+        <div class="card-body">
+          <div class="seo-grid">
+            <div class="form-group">
+              <label for="seoTitulo">Título SEO</label>
+              <input type="text" id="seoTitulo" readonly>
+            </div>
+            <div class="form-group">
+              <label for="seoSlug">Slug</label>
+              <input type="text" id="seoSlug" readonly>
+            </div>
+            <div class="form-group form-group-full">
+              <label for="seoDescricao">Meta Description</label>
+              <textarea id="seoDescricao" rows="2" readonly></textarea>
+            </div>
+          </div>
+          <button type="button" id="btnCopiarSeo" class="btn btn-outline">Copiar SEO</button>
+        </div>
+      </section>
+
+      <section id="saida" class="card">
+        <div class="card-header">
+          <h3>Área de Saída</h3>
+          <div class="btn-group">
+            <button type="button" id="btnGerar" class="btn btn-primary">Gerar HTML</button>
+            <button type="button" id="btnCopiarHtml" class="btn btn-secondary">Copiar HTML</button>
+            <button type="button" id="btnExportarHtml" class="btn btn-outline">Exportar HTML</button>
+            <button type="button" id="btnExportarTxt" class="btn btn-outline">Exportar TXT</button>
+            <button type="button" id="btnLimpar" class="btn btn-danger">Limpar</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="output-wrapper">
+            <div class="output-toolbar">
+              <span id="charCount">0 caracteres</span>
+              <button type="button" id="btnCopiarOutput" class="btn btn-sm">Copiar</button>
+            </div>
+            <pre id="htmlOutput" class="html-output"><code id="htmlCode"></code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="playstore.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
