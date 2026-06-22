@@ -55,11 +55,12 @@ function escaparHtml(texto) {
     .replace(/'/g, '&#39;');
 }
 
-function converterRecursosMod(texto) {
+function gerarModFeaturesHtml(texto) {
   if (!texto) return '';
   const linhas = texto.split('\n').filter(function (linha) {
     return linha.trim().length > 0;
   });
+  if (linhas.length === 0) return '';
   let html = '<div class="app-feature-list">\n';
   linhas.forEach(function (linha) {
     html += '<div class="app-feature">\n✓ ' + escaparHtml(linha.trim()) + '\n</div>\n';
@@ -79,111 +80,51 @@ function gerarScreenshotsHtml(dados) {
   return html;
 }
 
+let templateHtml = '';
+
+function carregarTemplate() {
+  if (templateHtml) return Promise.resolve(templateHtml);
+  return fetch('template.html')
+    .then(function (res) {
+      if (!res.ok) throw new Error('Não foi possível carregar template.html');
+      return res.text();
+    })
+    .then(function (texto) {
+      templateHtml = texto;
+      return templateHtml;
+    });
+}
+
+function substituirPlaceholder(html, chave, valor) {
+  return html.split('{{' + chave + '}}').join(valor || '');
+}
+
 function gerarHtmlBlogger(dados) {
+  if (!templateHtml) return '';
+
   const isJogo = dados.tipo === 'Jogo';
-  const sobreTitulo = isJogo ? 'Sobre este Jogo' : 'Sobre este Aplicativo';
-  const imagensTitulo = isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo';
-  const fraseFinal = isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.';
+  const mapa = {
+    APP_NAME: escaparHtml(dados.nome),
+    APP_ICON: escaparHtml(dados.icone),
+    VERSION: escaparHtml(dados.versao),
+    CATEGORY: escaparHtml(dados.categoria),
+    ANDROID: escaparHtml(dados.sistema),
+    MOD: escaparHtml(dados.mod),
+    MOD_FEATURES: gerarModFeaturesHtml(dados.recursosMod),
+    SCREENSHOTS: gerarScreenshotsHtml(dados),
+    DESCRIPTION: escaparHtml(dados.descricao).replace(/\n/g, '<br>'),
+    DOWNLOAD_LINK: escaparHtml(dados.download),
+    RATING: escaparHtml(dados.avaliacao),
+    UPDATE: escaparHtml(dados.atualizacao),
+    SOBRE_TITULO: isJogo ? 'Sobre este Jogo' : 'Sobre este Aplicativo',
+    IMAGENS_TITULO: isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo',
+    FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.'
+  };
 
-  const nome = escaparHtml(dados.nome);
-  const icone = escaparHtml(dados.icone);
-  const categoria = escaparHtml(dados.categoria);
-  const avaliacao = escaparHtml(dados.avaliacao);
-  const versao = escaparHtml(dados.versao);
-  const sistema = escaparHtml(dados.sistema);
-  const mod = escaparHtml(dados.mod);
-  const atualizacao = escaparHtml(dados.atualizacao);
-  const download = escaparHtml(dados.download);
-  const descricao = escaparHtml(dados.descricao).replace(/\n/g, '<br>');
-
-  let html = '';
-
-  html += '<div class="app-post">\n\n';
-  html += '  <div class="app-hero">\n';
-  html += '    <img alt="' + nome + '" class="app-icon" src="' + icone + '" />\n\n';
-  html += '    <div>\n';
-  html += '      <h2 class="app-title">' + nome + '</h2>\n';
-  html += '      <div class="app-dev">Blog de Jogos • Android</div>\n\n';
-  html += '      <div class="app-meta">\n';
-  html += '        <span>Android</span>\n';
-  html += '        <span>' + categoria + '</span>\n';
-  html += '        <span>Apk Mod</span>\n';
-  html += '        <span>' + atualizacao + '</span>\n';
-  html += '      </div>\n\n';
-  html += '      <a class="app-install"\n';
-  html += '         href="' + download + '"\n';
-  html += '         rel="nofollow noopener"\n';
-  html += '         target="_blank">\n';
-  html += '         Baixar Apk\n';
-  html += '      </a>\n';
-  html += '    </div>\n';
-  html += '  </div>\n\n';
-  html += '  <div class="app-stats">\n\n';
-  html += '    <div class="app-stat">\n';
-  html += '      <strong>' + avaliacao + ' ★</strong>\n';
-  html += '      <small>Avaliação</small>\n';
-  html += '    </div>\n\n';
-  html += '    <div class="app-stat">\n';
-  html += '      <strong>Versão</strong>\n';
-  html += '      <small>' + versao + '</small>\n';
-  html += '    </div>\n\n';
-  html += '    <div class="app-stat">\n';
-  html += '      <strong>Android</strong>\n';
-  html += '      <small>' + sistema + '</small>\n';
-  html += '    </div>\n\n';
-  html += '    <div class="app-stat">\n';
-  html += '      <strong>Mod</strong>\n';
-  html += '      <small>' + mod + '</small>\n';
-  html += '    </div>\n\n';
-  html += '  </div>\n\n';
-  html += '</div>\n\n';
-
-  html += '<div class="app-section">\n';
-  html += '<h2>' + sobreTitulo + '</h2>\n';
-  html += '<p>' + descricao + '</p>\n';
-  html += '</div>\n\n';
-
-  html += '<div class="app-info-grid">\n';
-  html += '<h2>Informações do Apk</h2>\n';
-  html += '<div class="app-info-item"><strong>Nome:</strong> ' + nome + '</div>\n';
-  html += '<div class="app-info-item"><strong>Versão:</strong> ' + versao + '</div>\n';
-  html += '<div class="app-info-item"><strong>Categoria:</strong> ' + categoria + '</div>\n';
-  html += '<div class="app-info-item"><strong>Sistema:</strong> ' + sistema + '</div>\n';
-  html += '<div class="app-info-item"><strong>Mod:</strong> ' + mod + '</div>\n';
-  html += '<div class="app-info-item"><strong>Atualização:</strong> ' + atualizacao + '</div>\n';
-  html += '<div class="app-info-item"><strong>Avaliação:</strong> ' + avaliacao + ' ★</div>\n';
-  html += '</div>\n\n';
-
-  if (dados.recursosMod) {
-    html += '<h2>Recursos do Mod</h2>\n';
-    html += converterRecursosMod(dados.recursosMod) + '\n\n';
-  }
-
-  html += '<h2>' + imagensTitulo + '</h2>\n';
-  html += gerarScreenshotsHtml(dados) + '\n\n';
-
-  html += '<div class="app-warning">\n';
-  html += '<strong>⚠ Aviso:</strong> Este APK modificado é fornecido apenas para fins educacionais. ';
-  html += 'Baixe por sua conta e risco. Recomendamos fazer backup dos seus dados antes de instalar.\n';
-  html += '</div>\n\n';
-
-  html += '<div class="app-install-guide">\n';
-  html += '<h2>Como instalar</h2>\n';
-  html += '<ol>\n';
-  html += '<li>Baixe o arquivo APK usando o botão de download abaixo.</li>\n';
-  html += '<li>Ative a opção "Fontes desconhecidas" nas configurações do Android.</li>\n';
-  html += '<li>Abra o arquivo APK baixado e toque em "Instalar".</li>\n';
-  html += '<li>Aguarde a instalação ser concluída.</li>\n';
-  html += '<li>' + fraseFinal + '</li>\n';
-  html += '</ol>\n';
-  html += '</div>\n\n';
-
-  html += '<div class="app-download-box">\n';
-  html += '<h2>Download</h2>\n';
-  html += '<p>Clique no botão abaixo para baixar ' + nome + ' Premium APK v' + versao + '.</p>\n';
-  html += '<a class="app-download-btn" href="' + download + '" rel="nofollow noopener" target="_blank">Baixar ' + nome + ' APK</a>\n';
-  html += '</div>\n';
-
+  let html = templateHtml;
+  Object.keys(mapa).forEach(function (chave) {
+    html = substituirPlaceholder(html, chave, mapa[chave]);
+  });
   return html;
 }
 
@@ -280,6 +221,18 @@ let htmlGerado = '';
 function handleGerarHtml() {
   const dados = obterDadosFormulario();
   htmlGerado = gerarHtmlBlogger(dados);
+  if (!htmlGerado) {
+    mostrarStatus('Aguarde o carregamento do template...', 'loading');
+    carregarTemplate().then(function () {
+      htmlGerado = gerarHtmlBlogger(dados);
+      atualizarSaida(htmlGerado);
+      mostrarStatus('HTML gerado com sucesso!', 'success');
+      setTimeout(limparStatus, 3000);
+    }).catch(function (err) {
+      mostrarStatus('Erro: ' + err.message, 'error');
+    });
+    return;
+  }
   atualizarSaida(htmlGerado);
   mostrarStatus('HTML gerado com sucesso!', 'success');
   setTimeout(limparStatus, 3000);
@@ -358,6 +311,7 @@ async function handleImportar() {
   }
   mostrarStatus('Importando dados...', 'loading');
   try {
+    await carregarTemplate();
     const dados = await importarDados(url);
     preencherFormulario(dados);
     atualizarTudo();
@@ -382,6 +336,7 @@ async function handleImportarGooglePlay() {
   }
   mostrarStatus('Importando da Google Play...', 'loading');
   try {
+    await carregarTemplate();
     const dados = await importarGooglePlay(url);
     preencherFormulario(dados);
     atualizarTudo();
@@ -411,6 +366,8 @@ function preencherFormulario(dados) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  carregarTemplate().catch(function () {});
+
   campos.forEach(function (campo) {
     const el = document.getElementById(campo);
     if (el) {
