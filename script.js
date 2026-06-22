@@ -55,28 +55,30 @@ function escaparHtml(texto) {
     .replace(/'/g, '&#39;');
 }
 
-function gerarModFeaturesHtml(texto) {
-  if (!texto) return '';
-  const linhas = texto.split('\n').filter(function (linha) {
+function gerarModFeaturesHtml(texto, mod) {
+  const linhas = (texto || '').split('\n').filter(function (linha) {
     return linha.trim().length > 0;
   });
-  if (linhas.length === 0) return '';
-  let html = '<div class="app-feature-list">\n';
+  if (linhas.length === 0) {
+    if (mod) {
+      return '<div class="app-feature">✓ ' + escaparHtml(mod) + '</div>';
+    }
+    return '';
+  }
+  let html = '';
   linhas.forEach(function (linha) {
-    html += '<div class="app-feature">\n✓ ' + escaparHtml(linha.trim()) + '\n</div>\n';
+    html += '<div class="app-feature">✓ ' + escaparHtml(linha.trim()) + '</div>\n';
   });
-  html += '</div>';
   return html;
 }
 
 function gerarScreenshotsHtml(dados) {
   const shots = [dados.screenshot1, dados.screenshot2, dados.screenshot3].filter(Boolean);
   if (shots.length === 0) return '';
-  let html = '<div class="app-gallery">\n';
+  let html = '';
   shots.forEach(function (url) {
-    html += '<img class="app-shot" src="' + escaparHtml(url) + '" alt="' + escaparHtml(dados.nome) + '" />\n';
+    html += '<img alt="' + escaparHtml(dados.nome) + '" src="' + escaparHtml(url) + '" />\n';
   });
-  html += '</div>';
   return html;
 }
 
@@ -110,13 +112,12 @@ function gerarHtmlBlogger(dados) {
     CATEGORY: escaparHtml(dados.categoria),
     ANDROID: escaparHtml(dados.sistema),
     MOD: escaparHtml(dados.mod),
-    MOD_FEATURES: gerarModFeaturesHtml(dados.recursosMod),
+    MOD_FEATURES: gerarModFeaturesHtml(dados.recursosMod, dados.mod),
     SCREENSHOTS: gerarScreenshotsHtml(dados),
     DESCRIPTION: escaparHtml(dados.descricao).replace(/\n/g, '<br>'),
     DOWNLOAD_LINK: escaparHtml(dados.download),
     RATING: escaparHtml(dados.avaliacao),
     UPDATE: escaparHtml(dados.atualizacao),
-    SOBRE_TITULO: isJogo ? 'Sobre este Jogo' : 'Sobre este Aplicativo',
     IMAGENS_TITULO: isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo',
     FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.'
   };

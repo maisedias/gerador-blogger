@@ -11,20 +11,16 @@
         <span>Android</span>
         <span>{{CATEGORY}}</span>
         <span>Apk Mod</span>
-        <span>{{UPDATE}}</span>
+        <span>Atualizado</span>
       </div>
 
-      <a class="app-install"
-         href="{{DOWNLOAD_LINK}}"
-         rel="nofollow noopener"
-         target="_blank">
-         Baixar Apk
+      <a class="app-install" href="{{DOWNLOAD_LINK}}" target="_blank">
+        Baixar Apk
       </a>
     </div>
   </div>
 
   <div class="app-stats">
-
     <div class="app-stat">
       <strong>{{RATING}} ★</strong>
       <small>Avaliação</small>
@@ -36,7 +32,7 @@
     </div>
 
     <div class="app-stat">
-      <strong>Android</strong>
+      <strong>Sistema Android</strong>
       <small>{{ANDROID}}</small>
     </div>
 
@@ -44,49 +40,97 @@
       <strong>Mod</strong>
       <small>{{MOD}}</small>
     </div>
-
   </div>
 
-</div>
+  <div class="app-section">
+    <h2>Descrição</h2>
 
-<div class="app-section">
-<h2>{{SOBRE_TITULO}}</h2>
-<p>{{DESCRIPTION}}</p>
-</div>
+    <p>
+      {{DESCRIPTION}}
+    </p>
+  </div>
 
-<div class="app-info-grid">
-<h2>Informações do Apk</h2>
-<div class="app-info-item"><strong>Nome:</strong> {{APP_NAME}}</div>
-<div class="app-info-item"><strong>Categoria:</strong> {{CATEGORY}}</div>
-<div class="app-info-item"><strong>Versão:</strong> {{VERSION}}</div>
-<div class="app-info-item"><strong>Sistema:</strong> {{ANDROID}}</div>
-<div class="app-info-item"><strong>Recursos:</strong> {{MOD}}</div>
-<div class="app-info-item"><strong>Atualização:</strong> {{UPDATE}}</div>
-</div>
+  <div class="app-section">
+    <h2>Informações do Apk</h2>
 
-<h2>Recursos do Mod</h2>
-{{MOD_FEATURES}}
+    <div class="app-info-grid">
+      <div class="app-info-item">
+        <small>Nome</small>
+        <span>{{APP_NAME}}</span>
+      </div>
 
-<h2>{{IMAGENS_TITULO}}</h2>
-{{SCREENSHOTS}}
+      <div class="app-info-item">
+        <small>Categoria</small>
+        <span>{{CATEGORY}}</span>
+      </div>
 
-<div class="app-warning">
-<strong>Atenção</strong>
-<p>Este arquivo é uma versão modificada. Use por sua conta e risco.</p>
-</div>
+      <div class="app-info-item">
+        <small>Versão</small>
+        <span>{{VERSION}}</span>
+      </div>
 
-<div class="app-install-guide">
-<h2>Como instalar</h2>
-<ol>
-<li>Baixe o arquivo APK clicando no botão de download.</li>
-<li>Ative a instalação de apps de fontes desconhecidas nas configurações.</li>
-<li>Instale o Apk e aguarde a conclusão.</li>
-<li>{{FRASE_FINAL}}</li>
-</ol>
-</div>
+      <div class="app-info-item">
+        <small>Sistema</small>
+        <span>{{ANDROID}}</span>
+      </div>
 
-<div class="app-download-box">
-<h2>Download {{APP_NAME}}</h2>
-<a class="app-download-btn" href="{{DOWNLOAD_LINK}}" rel="nofollow noopener" target="_blank">Baixar Apk</a>
-<p>Este APK é a forma mais rápida e segura de baixar o app. Não é necessário registro.</p>
+      <div class="app-info-item">
+        <small>Recursos</small>
+        <span>{{MOD}}</span>
+      </div>
+
+      <div class="app-info-item">
+        <small>Atualização</small>
+        <span>{{UPDATE}}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-section">
+    <h2>Recursos do Mod</h2>
+
+    <div class="app-feature-list">
+      {{MOD_FEATURES}}
+    </div>
+  </div>
+
+  <div class="app-section">
+    <h2>{{IMAGENS_TITULO}}</h2>
+
+    <div class="app-shots">
+      {{SCREENSHOTS}}
+    </div>
+  </div>
+
+  <div class="app-warning">
+    <h3>Atenção</h3>
+    <p>
+      Este arquivo é uma versão modificada. Use por sua conta e risco.
+    </p>
+  </div>
+
+  <div class="app-section">
+    <h2>Como instalar</h2>
+
+    <div class="app-steps">
+      <div class="app-step">Baixe o arquivo APK no botão de download.</div>
+      <div class="app-step">Ative a instalação de aplicativos de fontes desconhecidas no Android.</div>
+      <div class="app-step">Instale o Apk normalmente no seu aparelho.</div>
+      <div class="app-step">{{FRASE_FINAL}}</div>
+    </div>
+  </div>
+
+  <div class="app-download-box">
+    <h2>Download {{APP_NAME}}</h2>
+
+    <a class="app-install" href="{{DOWNLOAD_LINK}}" target="_blank">
+      Baixar Apk
+    </a>
+
+    <div class="app-download-note">
+      Em nosso site, você pode baixar a versão mais recente do {{APP_NAME}} - em formato Apk — rápido e grátis! Não é necessária inscrição ou SMS: link direto e arquivos verificados!
+      Verifique o arquivo antes de instalar no seu aparelho.
+    </div>
+  </div>
+
 </div>
