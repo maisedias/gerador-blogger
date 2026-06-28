@@ -3,14 +3,19 @@
         --mod-primary: #e50914; 
         --mod-primary-hover: #b8060f;
         
+        /* Cores do novo gráfico e botão (Igual a imagem) */
+        --mod-green: #12b76a;
+        --mod-green-hover: #0fa15c;
+        --mod-green-light: #d1fadf;
+        
         --mod-bg: transparent; 
         --mod-bg-sec: #f4f4f4;
         --mod-surface: #ffffff;
-        --mod-surface-hover: #f0f0f0;
+        --mod-surface-hover: #f9f9f9;
         
         --mod-text: #111111; 
         --mod-text-gray: #333333; 
-        --mod-text-light: #555555; 
+        --mod-text-light: #777777; 
         
         --mod-border: #e5e5e5;
         --mod-bar-inactive: #e0e0e0;
@@ -20,115 +25,103 @@
     body.dark-mode, body.dark, [data-theme="dark"], .dark-theme {
         --mod-bg-sec: #141414;
         --mod-surface: #1a1a1a;
-        --mod-surface-hover: #252525;
+        --mod-surface-hover: #222222;
         --mod-text: #ffffff;
         --mod-text-gray: #cccccc;
         --mod-text-light: #999999;
         --mod-border: #2a2a2a;
         --mod-bar-inactive: #333333;
         --mod-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --mod-green-light: rgba(18, 183, 106, 0.15);
     }
 
     .mod-post-wrapper { width: 100%; max-width: 100%; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: var(--mod-text); line-height: 1.6; overflow-x: hidden; }
     .mod-post-wrapper * { box-sizing: border-box; }
     
-    /* TOPO - Estilo 5play Mobile (Tudo centralizado e em coluna) */
-    .mod-hero { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 25px; width: 100%; }
-    
+    /* TOPO CENTRALIZADO */
+    .mod-hero { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; width: 100%; }
     .mod-hero-img-box { position: relative; margin: 0 auto 15px auto; }
     .mod-app-icon { width: 160px; height: 160px; object-fit: cover; border-radius: 35px; box-shadow: var(--mod-shadow); border: 1px solid var(--mod-border); }
     .mod-arch-badge { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); background-color: var(--mod-primary); color: #ffffff; font-size: 11px; font-weight: bold; padding: 4px 14px; border-radius: 20px; }
-    
     .mod-hero-content { width: 100%; }
     .mod-title { font-size: 26px; font-weight: 700; line-height: 1.3; color: var(--mod-text) !important; margin: 15px 0 20px 0; text-align: center; }
     
-    /* INFORMAÇÕES - "Tudo certinho em uma linha" sem quebrar */
-    .mod-meta { 
-        display: flex; 
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        justify-content: space-between; 
-        gap: 15px; 
-        padding: 15px 0; 
-        margin-bottom: 25px; 
-        border-top: 1px solid var(--mod-border); 
-        border-bottom: 1px solid var(--mod-border);
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
+    /* INFORMAÇÕES EM UMA LINHA */
+    .mod-meta { display: flex; flex-wrap: nowrap; overflow-x: auto; justify-content: space-between; gap: 15px; padding: 15px 0; margin-bottom: 25px; border-top: 1px solid var(--mod-border); border-bottom: 1px solid var(--mod-border); -ms-overflow-style: none; scrollbar-width: none; }
     .mod-meta::-webkit-scrollbar { display: none; }
-    
     .mod-meta-item { display: flex; flex-direction: column; align-items: center; min-width: fit-content; flex: 1; }
     .mod-meta-label { font-size: 12px; color: var(--mod-text-light) !important; margin-bottom: 4px; }
     .mod-meta-value { font-size: 14px; font-weight: 600; color: var(--mod-text-gray) !important; }
     
-    /* BOTÕES */
-    .mod-actions { display: flex; justify-content: center; gap: 15px; width: 100%; margin-bottom: 30px; }
-    .mod-btn { display: inline-flex; flex: 1; max-width: 250px; align-items: center; justify-content: center; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none !important; cursor: pointer; transition: 0.2s; border: 1px solid transparent; text-align: center; }
-    .mod-btn-primary { background-color: var(--mod-primary) !important; color: #ffffff !important; box-shadow: 0 4px 12px rgba(229, 9, 20, 0.2); }
-    .mod-btn-primary:hover { background-color: var(--mod-primary-hover) !important; }
-    .mod-btn-outline { background-color: var(--mod-surface); border: 1px solid var(--mod-border); color: var(--mod-text-gray) !important; }
-    .mod-btn-outline:hover { background-color: var(--mod-surface-hover); color: var(--mod-text) !important; }
+    /* NOVA BARRA DE AÇÕES (Botões e Curtidas da Imagem 1) */
+    .mod-action-bar { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin-bottom: 30px; align-items: stretch; justify-content: center; }
+    .mod-action-group { display: flex; flex: 1; min-width: 300px; border: 1px solid var(--mod-border); border-radius: 16px; padding: 8px; align-items: center; background: var(--mod-surface); gap: 10px; }
+    .mod-btn-green { background-color: var(--mod-green) !important; color: #ffffff !important; border-radius: 12px; padding: 12px 24px; font-weight: 700; font-size: 14px; text-decoration: none !important; transition: 0.2s; white-space: nowrap; }
+    .mod-btn-green:hover { background-color: var(--mod-green-hover) !important; }
     
+    .mod-action-icons { display: flex; flex: 1; justify-content: space-evenly; }
+    .mod-icon-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; background: transparent; border: none; color: var(--mod-text-light); font-size: 11px; cursor: pointer; transition: 0.2s; font-family: inherit; }
+    .mod-icon-btn:hover { color: var(--mod-text); }
+    .mod-icon-btn svg { width: 22px; height: 22px; margin-bottom: 4px; fill: currentColor; }
+    
+    .mod-vote-box { border: 1px solid var(--mod-border); border-radius: 16px; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--mod-surface); cursor: pointer; transition: 0.2s; min-width: 90px; }
+    .mod-vote-box:hover { background: var(--mod-surface-hover); }
+    .mod-vote-box svg { width: 22px; height: 22px; margin-bottom: 4px; fill: var(--mod-text-gray); }
+    .mod-vote-box span { font-size: 13px; font-weight: 600; color: var(--mod-text-gray); }
+    .mod-vote-box.active svg { fill: var(--mod-green); }
+    .mod-vote-box.active span { color: var(--mod-green); }
+
+    /* GALERIA E DESCRIÇÃO */
     .mod-gallery { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 30px; }
     .mod-gallery::-webkit-scrollbar { height: 6px; }
     .mod-gallery::-webkit-scrollbar-track { background: var(--mod-surface); border-radius: 10px; }
     .mod-gallery::-webkit-scrollbar-thumb { background: var(--mod-primary); border-radius: 10px; }
     .mod-gallery img { height: 180px; width: auto; border-radius: 12px; object-fit: cover; border: 1px solid var(--mod-border); }
     
-    /* DESCRIÇÃO CENTRALIZADA */
-    .mod-desc-text { 
-        color: var(--mod-text) !important; 
-        font-size: 15px !important; 
-        line-height: 1.8 !important; 
-        opacity: 1 !important; 
-        margin: 0 0 35px 0 !important;
-        text-align: center; /* Centralizado conforme pedido */
-    }
+    .mod-desc-text { color: var(--mod-text) !important; font-size: 15px !important; line-height: 1.8 !important; opacity: 1 !important; margin: 0 0 35px 0 !important; text-align: center; }
     
-    .mod-pop-widget { width: 100%; background: var(--mod-surface); padding: 25px; border-radius: 12px; border: 1px solid var(--mod-border); box-shadow: var(--mod-shadow); margin-bottom: 35px; }
+    /* NOVO GRÁFICO DE POPULARIDADE (Imagem 2) */
+    .mod-pop-widget { width: 100%; margin-bottom: 40px; }
     .mod-pop-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; color: var(--mod-text) !important; }
-    .mod-pop-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .mod-pop-score { font-size: 48px; font-weight: bold; color: var(--mod-primary); line-height: 1; }
-    .mod-pop-icon { width: 50px; height: 50px; background-color: rgba(229, 9, 20, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    .mod-pop-icon svg { width: 26px; height: 26px; fill: var(--mod-primary); }
-    .mod-pop-bar { display: flex; gap: 3px; height: 8px; margin-bottom: 10px; }
-    .mod-pop-bar span { flex: 1; background-color: var(--mod-bar-inactive); border-radius: 2px; }
-    .mod-pop-bar span.active-red { background-color: var(--mod-primary); }
-    .mod-pop-bar span.active-dark { background-color: #555555; }
+    .mod-pop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .mod-pop-score { font-size: 72px; font-weight: bold; color: var(--mod-green); line-height: 1; letter-spacing: -2px; }
+    
+    .mod-pop-badge { width: 90px; height: 90px; background-color: var(--mod-green-light); border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; }
+    /* Efeito serrilhado da borda via CSS mask ou pseudo-elementos */
+    .mod-pop-badge::before { content: ''; position: absolute; inset: -4px; background: repeating-conic-gradient(var(--mod-green-light) 0 15deg, transparent 15deg 30deg); border-radius: 50%; z-index: 0; opacity: 0.5; }
+    .mod-pop-badge svg { width: 45px; height: 45px; fill: none; stroke: var(--mod-green); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; z-index: 1; }
+
+    .mod-pop-chart { display: flex; align-items: flex-end; gap: 4px; height: 50px; margin-bottom: 10px; width: 100%; }
+    .mod-pop-chart span { flex: 1; border-radius: 2px; transition: height 0.5s, background-color 0.5s; background-color: var(--mod-bar-inactive); }
+    
     .mod-pop-stats { display: flex; justify-content: space-between; font-size: 12px; color: var(--mod-text-light); }
     
-    /* ÁREA DE DOWNLOAD E ABAS */
+    /* ÁREA DE DOWNLOAD */
     .mod-dl-section { background-color: var(--mod-bg-sec); border-radius: 16px; padding: 25px; border: 1px solid var(--mod-border); width: 100%; box-sizing: border-box; }
-    
     .mod-tabs-container { display: flex; justify-content: center; margin-bottom: 25px; }
     .mod-tabs-box { display: inline-flex; background-color: var(--mod-surface); border-radius: 25px; padding: 5px; border: 1px solid var(--mod-border); }
     .mod-tab { background: transparent; border: none; padding: 8px 24px; font-size: 14px; color: var(--mod-text-gray); border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     .mod-tab.active { background-color: var(--mod-primary); color: #ffffff; }
-    
     .mod-dl-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.4; color: var(--mod-text) !important; text-align: center; }
     .mod-dl-subtitle { font-size: 13px; color: var(--mod-text-light); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; text-align: center; }
     .mod-dl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; background-color: var(--mod-primary) !important; color: #ffffff !important; padding: 16px 20px; border-radius: 12px; text-decoration: none !important; margin-bottom: 20px; gap: 15px; box-shadow: 0 4px 12px rgba(229, 9, 20, 0.2); }
     .mod-dl-bar:hover { background-color: var(--mod-primary-hover) !important; }
     .mod-dl-filename { font-weight: 600; font-size: 15px; flex: 1 1 200px; word-break: break-all; }
     .mod-dl-size { font-weight: bold; font-size: 15px; white-space: nowrap; }
-    .mod-dl-footer { font-size: 13px; color: var(--mod-text-gray) !important; opacity: 1 !important; line-height: 1.6; }
 </style>
 
 <div class="mod-post-wrapper">
     
+    <!-- TOPO -->
     <div class="mod-hero">
-        <!-- Foto Centralizada com badge -->
         <div class="mod-hero-img-box">
             <img src="{{APP_ICON}}" alt="{{APP_NAME}}" class="mod-app-icon">
             <div class="mod-arch-badge">MOD</div>
         </div>
 
         <div class="mod-hero-content">
-            <!-- Título Centralizado -->
             <h1 class="mod-title">{{APP_NAME}}</h1>
             
-            <!-- Meta Infos em uma única linha (rola pros lados no mobile) -->
             <div class="mod-meta">
                 <div class="mod-meta-item"><span class="mod-meta-label">Atualizado</span><span class="mod-meta-value">{{UPDATE}}</span></div>
                 <div class="mod-meta-item"><span class="mod-meta-label">Versão</span><span class="mod-meta-value">{{VERSION}}</span></div>
@@ -137,52 +130,71 @@
                 <div class="mod-meta-item"><span class="mod-meta-label">Avaliação</span><span class="mod-meta-value">{{RATING}} ★</span></div>
             </div>
 
-            <!-- Botões Baixar e Compartilhar -->
-            <div class="mod-actions">
-                <a href="#mod-download-area" class="mod-btn mod-btn-primary">Baixar APK</a>
-                <!-- Botão Compartilhar Nativo via JavaScript -->
-                <button onclick="if(navigator.share){navigator.share({title:'{{APP_NAME}}',url:window.location.href});}else{prompt('Copie o link abaixo para compartilhar:', window.location.href);}" class="mod-btn mod-btn-outline">
-                    ↑ Compartilhar
-                </button>
+            <!-- NOVA BARRA DE AÇÕES (Imagem 1) -->
+            <div class="mod-action-bar">
+                <div class="mod-action-group">
+                    <a href="#mod-download-area" class="mod-btn-green">Baixar APK</a>
+                    
+                    <div class="mod-action-icons">
+                        <button class="mod-icon-btn" onclick="if(navigator.share){navigator.share({title:'{{APP_NAME}}',url:window.location.href});}else{prompt('Copie o link:', window.location.href);}">
+                            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92zM18 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 13c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm12 7.02c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+                            <span>Compartilhar</span>
+                        </button>
+                        <button class="mod-icon-btn" onclick="window.scrollTo(0,0); location.reload();">
+                            <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                            <span>Atualizar</span>
+                        </button>
+                        <button class="mod-icon-btn" onclick="alert('Pressione CTRL+D (ou a estrela no navegador) para adicionar aos favoritos!')">
+                            <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                            <span>Favoritos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mod-vote-box" id="btn-like">
+                    <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                    <span id="lbl-likes">+ 0</span>
+                </div>
+                <div class="mod-vote-box" id="btn-dislike">
+                    <svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>
+                    <span id="lbl-dislikes">- 0</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Galeria -->
+    <!-- GALERIA -->
     <div class="mod-gallery">
         {{SCREENSHOTS}}
     </div>
 
-    <!-- Descrição Centralizada -->
+    <!-- DESCRIÇÃO -->
     <p class="mod-desc-text">
         {{DESCRIPTION}}
     </p>
 
-    <!-- Popularidade -->
+    <!-- GRÁFICO DE POPULARIDADE DINÂMICO (Imagem 2) -->
     <div class="mod-pop-widget">
         <div class="mod-pop-title">Popularidade do aplicativo</div>
-        <div class="mod-pop-row">
-            <div class="mod-pop-score">{{RATING}}</div>
-            <div class="mod-pop-icon">
-                <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+        
+        <div class="mod-pop-header">
+            <div class="mod-pop-score" id="pop-percent-text">0%</div>
+            <div class="mod-pop-badge">
+                <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
             </div>
         </div>
-        <div class="mod-pop-bar">
-            <span class="active-dark"></span><span class="active-dark"></span>
-            <span class="active-red"></span><span class="active-red"></span><span class="active-red"></span>
-            <span class="active-red"></span><span class="active-red"></span><span class="active-red"></span>
-            <span class="active-red"></span><span class="active-red"></span>
-        </div>
+
+        <!-- Barrinhas do Gráfico geradas pelo JS -->
+        <div class="mod-pop-chart" id="pop-chart-bars"></div>
+
         <div class="mod-pop-stats">
-            <span>Votos: 169</span>
+            <span id="pop-total-votes">Votos: 0</span>
             <span>Comentários: 0</span>
         </div>
     </div>
 
-    <!-- ÁREA DE DOWNLOAD (Com abas funcionais!) -->
+    <!-- ÁREA DE DOWNLOAD E ABAS -->
     <div id="mod-download-area" class="mod-dl-section">
-        
-        <!-- Sistema de Abas (Alterna entre Arquivo e Informação) -->
         <div class="mod-tabs-container">
             <div class="mod-tabs-box">
                 <button id="btn-tab-arq" class="mod-tab active" onclick="document.getElementById('tab-arq').style.display='block'; document.getElementById('tab-inf').style.display='none'; document.getElementById('btn-tab-arq').classList.add('active'); document.getElementById('btn-tab-inf').classList.remove('active');">Arquivos</button>
@@ -190,7 +202,6 @@
             </div>
         </div>
 
-        <!-- ABA 1: Arquivos (Downloads) -->
         <div id="tab-arq">
             <h2 class="mod-dl-title">Baixe {{APP_NAME}} para Android gratuitamente</h2>
             <div class="mod-dl-subtitle">MENU MODIFICADO</div>
@@ -200,17 +211,99 @@
                 <span class="mod-dl-size">Baixar APK</span>
             </a>
 
-            <div class="mod-dl-footer">
-                <strong style="text-align: center;">Download rápido — livre de vírus!</strong>
+            <div class="mod-dl-footer" style="text-align: center;">
+                <strong>Download rápido — livre de vírus!</strong>
                 Em nosso site, você pode baixar a versão mais recente em formato APK — rápido e grátis! Sem necessidade de cadastro ou SMS: link direto e arquivos verificados!
             </div>
         </div>
 
-        <!-- ABA 2: Informação (Oculta por padrão, aparece ao clicar) -->
-        <div id="tab-inf" style="display: none;">
+        <div id="tab-inf" style="display: none; text-align: center;">
             <h3 style="margin-bottom: 12px; font-size: 16px; color: var(--mod-text) !important;">Informações do MOD:</h3>
             {{MOD_FEATURES_BLOCK}}
         </div>
-        
     </div>
 </div>
+
+<!-- SCRIPT RESPONSÁVEL POR FAZER AS CURTIDAS E O GRÁFICO FUNCIONAREM -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Configurações iniciais (Baseado na Avaliação do Jogo)
+    const postID = '{{APP_NAME}}'.replace(/\s+/g, '-').toLowerCase();
+    const ratingApp = parseFloat('{{RATING}}') || 4.5;
+    
+    // Calcula um número realista de votos base (ex: 4.5 * 1500 = 6750 likes)
+    let likes = Math.floor(ratingApp * 1800);
+    let dislikes = Math.floor((5 - ratingApp) * 1800);
+    
+    // Verifica se o usuário já votou neste post (salvo no celular dele)
+    let userVote = localStorage.getItem('vote_' + postID);
+    if(userVote === 'like') likes++;
+    if(userVote === 'dislike') dislikes++;
+
+    const btnLike = document.getElementById('btn-like');
+    const btnDislike = document.getElementById('btn-dislike');
+    const chartContainer = document.getElementById('pop-chart-bars');
+
+    // 2. Criar as barrinhas do gráfico (Alturas variadas como uma onda)
+    const waveHeights = [15, 20, 18, 25, 22, 30, 25, 35, 30, 45, 40, 50, 45, 60, 55, 75, 65, 85, 100, 90, 80, 70, 60, 55, 50, 45, 40, 35, 30, 25, 20, 20, 15, 15];
+    waveHeights.forEach(h => {
+        let span = document.createElement('span');
+        span.style.height = h + '%';
+        chartContainer.appendChild(span);
+    });
+
+    // 3. Função para atualizar as cores e os números na tela
+    function updateUI() {
+        const totalVotes = likes + dislikes;
+        const percentage = totalVotes === 0 ? 0 : Math.round((likes / totalVotes) * 100);
+        
+        document.getElementById('lbl-likes').innerText = '+ ' + likes;
+        document.getElementById('lbl-dislikes').innerText = '- ' + dislikes;
+        document.getElementById('pop-percent-text').innerText = percentage + '%';
+        document.getElementById('pop-total-votes').innerText = 'Votos: ' + totalVotes;
+
+        // Estilizar botões clicados
+        btnLike.className = userVote === 'like' ? 'mod-vote-box active' : 'mod-vote-box';
+        btnDislike.className = userVote === 'dislike' ? 'mod-vote-box active' : 'mod-vote-box';
+
+        // Pintar o gráfico com base na porcentagem
+        const bars = chartContainer.children;
+        const fillLimit = Math.floor((percentage / 100) * bars.length);
+        
+        for(let i = 0; i < bars.length; i++) {
+            if(i < fillLimit) {
+                // Degrade de cores: Vermelho -> Laranja -> Amarelo -> Verde
+                let ratio = i / bars.length;
+                if(ratio < 0.2) bars[i].style.backgroundColor = '#ef4444'; // Vermelho
+                else if(ratio < 0.4) bars[i].style.backgroundColor = '#f97316'; // Laranja
+                else if(ratio < 0.6) bars[i].style.backgroundColor = '#eab308'; // Amarelo
+                else bars[i].style.backgroundColor = '#12b76a'; // Verde
+            } else {
+                bars[i].style.backgroundColor = 'var(--mod-bar-inactive)'; // Cinza (Vazio)
+            }
+        }
+    }
+
+    // 4. Ações de Clique
+    btnLike.onclick = function() {
+        if(userVote === 'like') return; // Já curtiu
+        if(userVote === 'dislike') dislikes--; // Remove o dislike anterior
+        likes++;
+        userVote = 'like';
+        localStorage.setItem('vote_' + postID, 'like');
+        updateUI();
+    };
+
+    btnDislike.onclick = function() {
+        if(userVote === 'dislike') return; // Já descurtiu
+        if(userVote === 'like') likes--; // Remove o like anterior
+        dislikes++;
+        userVote = 'dislike';
+        localStorage.setItem('vote_' + postID, 'dislike');
+        updateUI();
+    };
+
+    // Inicializa a tela
+    updateUI();
+});
+</script>
