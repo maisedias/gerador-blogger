@@ -55,7 +55,7 @@ function escaparHtml(texto) {
     .replace(/'/g, '&#39;');
 }
 
-/* --- FUNÇÃO ATUALIZADA PARA O NOVO TEMPLATE --- */
+/* --- FUNÇÃO ATUALIZADA: Layout limpo para caber na Aba 'Informação' --- */
 function gerarModFeaturesHtml(texto, mod) {
   const linhas = (texto || '').split('\n').filter(function (linha) {
     return linha.trim().length > 0;
@@ -65,21 +65,17 @@ function gerarModFeaturesHtml(texto, mod) {
 
   if (linhas.length === 0) {
     if (mod) {
-      itensHtml = '<div class="app-feature">✓ ' + escaparHtml(mod) + '</div>';
+      itensHtml = '<p style="color: var(--mod-text) !important; margin-bottom: 6px; font-weight: 500;">- ' + escaparHtml(mod) + '</p>';
     } else {
-      return ''; // Retorna vazio se não tiver mod nenhum, escondendo a caixa no HTML
+      itensHtml = '<p style="color: var(--mod-text-gray) !important;">Nenhuma informação adicional sobre o mod disponível.</p>';
     }
   } else {
     linhas.forEach(function (linha) {
-      itensHtml += '<div class="app-feature">✓ ' + escaparHtml(linha.trim()) + '</div>\n';
+      itensHtml += '<p style="color: var(--mod-text) !important; margin-bottom: 6px; font-weight: 500;">- ' + escaparHtml(linha.trim()) + '</p>\n';
     });
   }
 
-  // Retorna a caixa completa customizada pro Template Novo
-  return '<div style="margin-top: 25px; padding: 20px; background: var(--mod-surface); border-radius: 12px; border: 1px solid var(--mod-border);">' +
-         '<h3 style="margin-bottom: 15px; color: var(--mod-primary); font-size: 18px;">Recursos do Mod</h3>' +
-         '<div>' + itensHtml + '</div>' +
-         '</div>';
+  return itensHtml;
 }
 
 function gerarScreenshotsHtml(dados) {
@@ -111,13 +107,11 @@ function substituirPlaceholder(html, chave, valor) {
   return html.split('{{' + chave + '}}').join(valor || '');
 }
 
-/* --- FUNÇÃO ATUALIZADA COM AS NOVAS CHAVES --- */
 function gerarHtmlBlogger(dados) {
   if (!templateHtml) return '';
 
   const isJogo = dados.tipo === 'Jogo';
   
-  // Lógica para criar um nome de arquivo bonito para o botão de download
   const nomeFormatado = (dados.nome || 'app').toLowerCase().replace(/\s+/g, '-');
   const nomeArquivo = nomeFormatado + '-v' + (dados.versao || '1.0') + '-mod.apk';
 
@@ -136,7 +130,7 @@ function gerarHtmlBlogger(dados) {
     UPDATE: escaparHtml(dados.atualizacao),
     IMAGENS_TITULO: isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo',
     FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.',
-    FILE_NAME: nomeArquivo // Nova chave
+    FILE_NAME: nomeArquivo
   };
 
   let html = templateHtml;
