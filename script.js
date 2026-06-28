@@ -55,21 +55,31 @@ function escaparHtml(texto) {
     .replace(/'/g, '&#39;');
 }
 
+/* --- FUNÇÃO ATUALIZADA PARA O NOVO TEMPLATE --- */
 function gerarModFeaturesHtml(texto, mod) {
   const linhas = (texto || '').split('\n').filter(function (linha) {
     return linha.trim().length > 0;
   });
+  
+  let itensHtml = '';
+
   if (linhas.length === 0) {
     if (mod) {
-      return '<div class="app-feature">✓ ' + escaparHtml(mod) + '</div>';
+      itensHtml = '<div class="app-feature">✓ ' + escaparHtml(mod) + '</div>';
+    } else {
+      return ''; // Retorna vazio se não tiver mod nenhum, escondendo a caixa no HTML
     }
-    return '';
+  } else {
+    linhas.forEach(function (linha) {
+      itensHtml += '<div class="app-feature">✓ ' + escaparHtml(linha.trim()) + '</div>\n';
+    });
   }
-  let html = '';
-  linhas.forEach(function (linha) {
-    html += '<div class="app-feature">✓ ' + escaparHtml(linha.trim()) + '</div>\n';
-  });
-  return html;
+
+  // Retorna a caixa completa customizada pro Template Novo
+  return '<div style="margin-top: 25px; padding: 20px; background: var(--mod-surface); border-radius: 12px; border: 1px solid var(--mod-border);">' +
+         '<h3 style="margin-bottom: 15px; color: var(--mod-primary); font-size: 18px;">Recursos do Mod</h3>' +
+         '<div>' + itensHtml + '</div>' +
+         '</div>';
 }
 
 function gerarScreenshotsHtml(dados) {
@@ -101,10 +111,16 @@ function substituirPlaceholder(html, chave, valor) {
   return html.split('{{' + chave + '}}').join(valor || '');
 }
 
+/* --- FUNÇÃO ATUALIZADA COM AS NOVAS CHAVES --- */
 function gerarHtmlBlogger(dados) {
   if (!templateHtml) return '';
 
   const isJogo = dados.tipo === 'Jogo';
+  
+  // Lógica para criar um nome de arquivo bonito para o botão de download
+  const nomeFormatado = (dados.nome || 'app').toLowerCase().replace(/\s+/g, '-');
+  const nomeArquivo = nomeFormatado + '-v' + (dados.versao || '1.0') + '-mod.apk';
+
   const mapa = {
     APP_NAME: escaparHtml(dados.nome),
     APP_ICON: escaparHtml(dados.icone),
@@ -112,14 +128,15 @@ function gerarHtmlBlogger(dados) {
     CATEGORY: escaparHtml(dados.categoria),
     ANDROID: escaparHtml(dados.sistema),
     MOD: escaparHtml(dados.mod),
-    MOD_FEATURES: gerarModFeaturesHtml(dados.recursosMod, dados.mod),
+    MOD_FEATURES_BLOCK: gerarModFeaturesHtml(dados.recursosMod, dados.mod),
     SCREENSHOTS: gerarScreenshotsHtml(dados),
     DESCRIPTION: escaparHtml(dados.descricao).replace(/\n/g, '<br>'),
     DOWNLOAD_LINK: escaparHtml(dados.download),
     RATING: escaparHtml(dados.avaliacao),
     UPDATE: escaparHtml(dados.atualizacao),
     IMAGENS_TITULO: isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo',
-    FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.'
+    FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.',
+    FILE_NAME: nomeArquivo // Nova chave
   };
 
   let html = templateHtml;
