@@ -1,408 +1,105 @@
-const campos = [
-  'nome', 'tipo', 'icone', 'categoria', 'avaliacao', 'versao',
-  'sistema', 'mod', 'atualizacao', 'descricao', 'download',
-  'screenshot1', 'screenshot2', 'screenshot3', 'recursosMod'
-];
+(function () {
+  'use strict';
+  const $ = function (s, root) { return (root || document).querySelector(s); };
+  const $$ = function (s, root) { return Array.from((root || document).querySelectorAll(s)); };
+  const fields = ['nome','tipo','icone','categoria','avaliacao','versao','sistema','dataAtualizacao','descricaoHtml','mod','recursosMod','linkDownload','screenshots','templateId','tituloSeo','slug','metaDescription','nomeArquivo','tamanhoArquivo'];
+  let current = AppModels.novaPostagem(); let templates = []; let posts = []; let html = ''; let templateSource = ''; let busy = false; let previewTimer;
 
-function obterValor(id) {
-  const el = document.getElementById(id);
-  return el ? el.value.trim() : '';
-}
+  function toast(message, type) { const el = document.createElement('div'); el.className = 'toast ' + (type || 'success'); el.textContent = message; $('#toastRegion').appendChild(el); setTimeout(function () { el.remove(); }, 4500); }
+  function value(id) { const el = $('#' + id); return el ? el.value.trim() : ''; }
+  function setValue(id, val) { const el = $('#' + id); if (el) el.value = val == null ? '' : val; }
+  function download(content, filename, type) { const url = URL.createObjectURL(new Blob([content], { type: type || 'text/plain;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(function () { URL.revokeObjectURL(url); }, 0); }
+  async function copy(content) { await navigator.clipboard.writeText(content); toast('Conteúdo copiado.'); }
+  function dialog(content) { $('#dialogContent').innerHTML = content; $('#appDialog').showModal(); }
+  function confirmDialog(message, action, label) { dialog('<h3>Confirmação</h3><p>' + TemplateEngine.escapeHtml(message) + '</p><div class="btn-group"><button type="button" class="btn btn-danger" id="dialogConfirm">' + (label || 'Confirmar') + '</button><button class="btn btn-outline" value="cancel">Cancelar</button></div>'); $('#dialogConfirm').onclick = async function () { $('#appDialog').close(); await action(); }; }
+  async function operation(fn) { if (busy) return; busy = true; $$('button').forEach(function (b) { b.disabled = true; }); try { await fn(); } catch (e) { console.error(e); toast(e.message || 'Ocorreu um erro.', 'error'); } finally { busy = false; $$('button').forEach(function (b) { b.disabled = false; }); } }
 
-function definirValor(id, valor) {
-  const el = document.getElementById(id);
-  if (el) el.value = valor || '';
-}
-
-function obterDadosFormulario() {
-  const dados = {};
-  campos.forEach(function (campo) {
-    dados[campo] = obterValor(campo);
-  });
-  return dados;
-}
-
-function gerarSlug(nome) {
-  if (!nome) return '';
-  return nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    + '-premium-apk';
-}
-
-function gerarSeo(dados) {
-  const nome = dados.nome || 'App';
-  const versao = dados.versao || '1.0';
-  return {
-    titulo: nome + ' Premium APK v' + versao + ' Download Android',
-    descricao: 'Baixe a versão mais recente de ' + nome + ' para Android. APK atualizado com recursos premium e download rápido.',
-    slug: gerarSlug(nome)
-  };
-}
-
-function escaparHtml(texto) {
-  if (!texto) return '';
-  return texto
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-/* --- FUNÇÃO ATUALIZADA PARA O NOVO TEMPLATE --- */
-function gerarModFeaturesHtml(texto, mod) {
-  const linhas = (texto || '').split('\n').filter(function (linha) {
-    return linha.trim().length > 0;
-  });
-  
-  let itensHtml = '';
-
-  if (linhas.length === 0) {
-    if (mod) {
-      itensHtml = '<div class="app-feature">✓ ' + escaparHtml(mod) + '</div>';
-    } else {
-      return ''; // Retorna vazio se não tiver mod nenhum, escondendo a caixa no HTML
-    }
-  } else {
-    linhas.forEach(function (linha) {
-      itensHtml += '<div class="app-feature">✓ ' + escaparHtml(linha.trim()) + '</div>\n';
-    });
+  function fromForm() {
+    const data = Object.assign({}, current);
+    fields.forEach(function (id) { if (id !== 'screenshots') data[id] = value(id); });
+    data.screenshots = value('screenshots').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    data.camposProtegidos = current.camposProtegidos || [];
+    return AppModels.atualizarAutomaticos(data, current);
   }
+  function toForm(data) {
+    current = AppModels.novaPostagem(data); fields.forEach(function (id) { setValue(id, id === 'screenshots' ? current.screenshots.join('\n') : current[id]); });
+    const persisted = data && posts.some(function (p) { return p.id === data.id; }); $('#editingBadge').textContent = persisted ? 'Editando: ' + (current.nome || 'rascunho') : ''; $('#editingBadge').classList.toggle('hidden', !persisted); $('#btnUpdate').classList.toggle('hidden', !persisted);
+    renderLocks(); syncAutoButtons(); schedulePreview();
+  }
+  function templateData(data) {
+    const resources = (data.recursosMod || data.mod || '').split(/\r?\n/).filter(Boolean).map(function (x) { return '<div class="app-feature">✓ ' + TemplateEngine.escapeHtml(x) + '</div>'; }).join('');
+    return Object.assign({}, data, { postId: data.id, descricaoHtml: data.descricaoHtml || '', recursosModHtml: resources, imagensTitulo: data.tipo === 'Jogo' ? 'Imagens do jogo' : 'Imagens do aplicativo', fraseFinal: data.tipo === 'Jogo' ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.', downloadHref: data.linkDownload || '#download-indisponivel', downloadEstado: data.linkDownload ? '' : 'is-disabled', downloadMensagem: data.linkDownload ? '' : 'Link de download não informado' });
+  }
+  function selectedTemplate(data) { return templates.find(function (t) { return t.id === data.templateId; }); }
+  function generate(data, validateReady) {
+    const tpl = selectedTemplate(data); const report = tpl ? TemplateEngine.analisar(tpl.conteudo) : null; const validation = AppModels.validarPostagem(data, tpl, report);
+    renderValidation(validation); if (validateReady && validation.erros.length) throw new Error('Corrija os erros antes de gerar ou exportar.');
+    html = tpl ? TemplateEngine.render(tpl.conteudo, templateData(data)) : ''; $('#htmlOutput').value = html; return { html, validation };
+  }
+  function renderValidation(result) { $('#validationBox').innerHTML = (result.erros.length ? '<div class="validation errors"><strong>Erros</strong><ul>' + result.erros.map(function (x) { return '<li>' + TemplateEngine.escapeHtml(x) + '</li>'; }).join('') + '</ul></div>' : '<div class="validation ok">Nenhum erro impeditivo.</div>') + (result.avisos.length ? '<div class="validation warnings"><strong>Avisos</strong><ul>' + result.avisos.map(function (x) { return '<li>' + TemplateEngine.escapeHtml(x) + '</li>'; }).join('') + '</ul></div>' : ''); }
+  function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(function () { const data = fromForm(); const tpl = selectedTemplate(data); $('#previewFrame').srcdoc = tpl ? TemplateEngine.render(tpl.conteudo, templateData(data)).replace(/<script[\s\S]*?<\/script>/gi, '') : '<p>Selecione um template.</p>'; renderValidation(AppModels.validarPostagem(data, tpl, tpl ? TemplateEngine.analisar(tpl.conteudo) : null)); }, 180); }
 
-  // Retorna a caixa completa customizada pro Template Novo
-  return '<div style="margin-top: 25px; padding: 20px; background: var(--mod-surface); border-radius: 12px; border: 1px solid var(--mod-border);">' +
-         '<h3 style="margin-bottom: 15px; color: var(--mod-primary); font-size: 18px;">Recursos do Mod</h3>' +
-         '<div>' + itensHtml + '</div>' +
-         '</div>';
-}
-
-function gerarScreenshotsHtml(dados) {
-  const shots = [dados.screenshot1, dados.screenshot2, dados.screenshot3].filter(Boolean);
-  if (shots.length === 0) return '';
-  let html = '';
-  shots.forEach(function (url) {
-    html += '<img alt="' + escaparHtml(dados.nome) + '" src="' + escaparHtml(url) + '" />\n';
-  });
-  return html;
-}
-
-let templateHtml = '';
-
-function carregarTemplate() {
-  if (templateHtml) return Promise.resolve(templateHtml);
-  return fetch('template.html')
-    .then(function (res) {
-      if (!res.ok) throw new Error('Não foi possível carregar template.html');
-      return res.text();
-    })
-    .then(function (texto) {
-      templateHtml = texto;
-      return templateHtml;
-    });
-}
-
-function substituirPlaceholder(html, chave, valor) {
-  return html.split('{{' + chave + '}}').join(valor || '');
-}
-
-/* --- FUNÇÃO ATUALIZADA COM AS NOVAS CHAVES --- */
-function gerarHtmlBlogger(dados) {
-  if (!templateHtml) return '';
-
-  const isJogo = dados.tipo === 'Jogo';
-  
-  // Lógica para criar um nome de arquivo bonito para o botão de download
-  const nomeFormatado = (dados.nome || 'app').toLowerCase().replace(/\s+/g, '-');
-  const nomeArquivo = nomeFormatado + '-v' + (dados.versao || '1.0') + '-mod.apk';
-
-  const mapa = {
-    APP_NAME: escaparHtml(dados.nome),
-    APP_ICON: escaparHtml(dados.icone),
-    VERSION: escaparHtml(dados.versao),
-    CATEGORY: escaparHtml(dados.categoria),
-    ANDROID: escaparHtml(dados.sistema),
-    MOD: escaparHtml(dados.mod),
-    MOD_FEATURES_BLOCK: gerarModFeaturesHtml(dados.recursosMod, dados.mod),
-    SCREENSHOTS: gerarScreenshotsHtml(dados),
-    DESCRIPTION: escaparHtml(dados.descricao).replace(/\n/g, '<br>'),
-    DOWNLOAD_LINK: escaparHtml(dados.download),
-    RATING: escaparHtml(dados.avaliacao),
-    UPDATE: escaparHtml(dados.atualizacao),
-    IMAGENS_TITULO: isJogo ? 'Imagens do jogo' : 'Imagens do aplicativo',
-    FRASE_FINAL: isJogo ? 'Abra o jogo e aproveite.' : 'Abra o aplicativo e aproveite.',
-    FILE_NAME: nomeArquivo // Nova chave
-  };
-
-  let html = templateHtml;
-  Object.keys(mapa).forEach(function (chave) {
-    html = substituirPlaceholder(html, chave, mapa[chave]);
-  });
-  return html;
-}
-
-function aplicarSyntaxHighlight(html) {
-  return html
-    .replace(/(&lt;\/?)([\w-]+)/g, '$1<span class="tag">$2</span>')
-    .replace(/(class|href|src|alt|rel|target)(=)/g, '<span class="attr">$1</span>$2')
-    .replace(/(&quot;[^&]*&quot;)/g, '<span class="value">$1</span>');
-}
-
-function atualizarPreview(dados) {
-  const iconEl = document.getElementById('previewIcon');
-  const titleEl = document.getElementById('previewTitle');
-  const catEl = document.getElementById('previewCategory');
-  const versaoEl = document.getElementById('previewVersao');
-  const avalEl = document.getElementById('previewAvaliacao');
-  const dlEl = document.getElementById('previewDownload');
-
-  if (iconEl) {
-    if (dados.icone) {
-      iconEl.src = dados.icone;
-      iconEl.style.display = 'block';
-      iconEl.alt = dados.nome || 'Ícone';
-    } else {
-      iconEl.style.display = 'none';
+  async function ensureDefaultTemplate() {
+    templateSource = await fetch('template.html').then(function (r) { if (!r.ok) throw new Error('Não foi possível carregar o template padrão.'); return r.text(); });
+    const existing = await AppDB.get('templates', AppModels.TEMPLATE_PADRAO_ID);
+    if (!existing) await AppDB.put('templates', { id: AppModels.TEMPLATE_PADRAO_ID, nome: 'Template APK Padrão', descricao: 'Template original responsivo para jogos e aplicativos APK.', tipo: 'Universal', conteudo: templateSource, ativo: true, padrao: true, protegido: true, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() });
+  }
+  function fallbackTemplate() {
+    return '<!-- template-interno-fallback -->' +
+      '<style>.apk-fallback{font-family:Arial,sans-serif;max-width:900px;margin:auto;color:#222}.apk-fallback .hero{display:flex;gap:20px;align-items:center}.apk-fallback img.icon{width:120px;height:120px;object-fit:cover;border-radius:24px}.apk-fallback .gallery{display:flex;gap:12px;overflow:auto;margin:24px 0}.apk-fallback .gallery img{height:180px;border-radius:10px}.apk-fallback .download{display:block;background:#e50914;color:#fff;padding:16px;border-radius:10px;text-align:center;text-decoration:none}.apk-fallback .download.is-disabled{background:#777;pointer-events:none}@media(max-width:600px){.apk-fallback img.icon{width:80px;height:80px}}</style>' +
+      '<article class="apk-fallback" data-post-id="{{postId}}"><div class="hero"><img class="icon" src="{{icone}}" alt="{{nome}}"><div><h1>{{nome}}</h1><p>{{categoria}} · Versão {{versao}} · Android {{sistema}}</p><p>Atualizado em {{dataAtualizacao}} · {{avaliacao}} ★</p></div></div><div class="gallery">{{#each screenshots}}<img src="{{this}}" alt="{{../nome}}">{{/each}}</div><div>{{{descricaoHtml}}}</div>{{#if mod}}<h2>Recursos do MOD</h2><div>{{{recursosModHtml}}}</div>{{/if}}<h2>Download</h2><a class="download {{downloadEstado}}" href="{{downloadHref}}" rel="noopener nofollow" target="_blank">{{nomeArquivo}} — {{#if linkDownload}}Baixar APK{{/if}}{{downloadMensagem}}</a></article>';
+  }
+  async function ensureDefaultTemplateSafe() {
+    const existing = await AppDB.get('templates', AppModels.TEMPLATE_PADRAO_ID);
+    try { templateSource = await fetch('template.html?v=2').then(function (r) { if (!r.ok) throw new Error('Template não encontrado.'); return r.text(); }); }
+    catch (_) { templateSource = existing && existing.conteudo ? existing.conteudo : fallbackTemplate(); setTimeout(function () { toast('Aplicativo iniciado em modo local. Para importar dados, execute node server.js.', 'error'); }, 300); }
+    if (!existing || ((existing.conteudo || '').includes('template-interno-fallback') && !templateSource.includes('template-interno-fallback'))) {
+      await AppDB.put('templates', { id:AppModels.TEMPLATE_PADRAO_ID, nome:'Template APK Padrão', descricao:'Template original responsivo para jogos e aplicativos APK.', tipo:'Universal', conteudo:templateSource, ativo:true, padrao:true, protegido:true, criadoEm:existing?existing.criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString() });
     }
   }
-  if (titleEl) titleEl.textContent = dados.nome || 'Nome do App';
-  if (catEl) catEl.textContent = dados.categoria || 'Categoria';
-  if (versaoEl) versaoEl.textContent = dados.versao ? 'v' + dados.versao : 'v1.0';
-  if (avalEl) avalEl.textContent = dados.avaliacao ? dados.avaliacao + ' ★' : '— ★';
-  if (dlEl) {
-    dlEl.href = dados.download || '#';
-    if (!dados.download) dlEl.style.opacity = '0.5';
-    else dlEl.style.opacity = '1';
+  async function refresh() { templates = await AppDB.all('templates'); posts = await AppDB.all('postagens'); renderTemplateSelect(); renderLibraryFilters(); renderPosts(); renderTemplates(); renderQuickSelect(); }
+  function renderLibraryFilters() { const category=value('filterCategory'), template=value('filterTemplate'); const categories=Array.from(new Set(posts.map(function(p){return p.categoria;}).filter(Boolean))).sort(); $('#filterCategory').innerHTML='<option value="">Todas as categorias</option>'+categories.map(function(x){return '<option>'+TemplateEngine.escapeHtml(x)+'</option>';}).join(''); $('#filterTemplate').innerHTML='<option value="">Todos os templates</option>'+templates.map(function(t){return '<option value="'+t.id+'">'+TemplateEngine.escapeHtml(t.nome)+'</option>';}).join(''); setValue('filterCategory',category);setValue('filterTemplate',template); }
+  function renderTemplateSelect() { const active = templates.filter(function (t) { return t.ativo; }); $('#templateId').innerHTML = active.map(function (t) { return '<option value="' + t.id + '">' + TemplateEngine.escapeHtml(t.nome) + ' — ' + t.tipo + (t.padrao ? ' (padrão)' : '') + '</option>'; }).join(''); if (active.some(function (t) { return t.id === current.templateId; })) setValue('templateId', current.templateId); else if (active[0]) setValue('templateId', active.find(function (t) { return t.padrao; })?.id || active[0].id); updateTemplateHelp(); }
+  function updateTemplateHelp() { const t = templates.find(function (x) { return x.id === value('templateId'); }); $('#templateHelp').textContent = t ? t.tipo + ' · ' + t.descricao + (t.padrao ? ' · Template padrão' : '') : ''; }
+
+  async function save(status, ready) {
+    const previous = posts.find(function (p) { return p.id === current.id; }); let data = fromForm(); data.status = status; data.atualizadoEm = new Date().toISOString();
+    const generated = generate(data, ready); data.htmlGerado = generated.html;
+    if (previous) await addHistory(previous, data, 'edição completa');
+    await AppDB.put('postagens', data); current = data; await refresh(); toForm(data); toast(ready ? 'Postagem salva e HTML gerado com sucesso.' : 'Postagem salva como rascunho.');
   }
-}
+  async function addHistory(oldData, newData, type) { await AppDB.put('historico', { id: AppModels.uuid(), postId: oldData.id, criadoEm: new Date().toISOString(), tipo: type, valoresAnteriores: oldData, valoresNovos: newData, htmlAnterior: oldData.htmlGerado || '', templateId: oldData.templateId, versao: oldData.versao }); }
+  function newPost() { const standard = templates.find(function (t) { return t.padrao && t.ativo; }); toForm(AppModels.novaPostagem({ templateId: standard ? standard.id : AppModels.TEMPLATE_PADRAO_ID, dataAtualizacao: new Date().toLocaleDateString('pt-BR') })); html = ''; $('#htmlOutput').value = ''; showView('editor'); }
+  function editPost(id) { const post = posts.find(function (p) { return p.id === id; }); if (post) { toForm(post); generate(post, false); showView('editor'); } }
 
-function atualizarSeo(dados) {
-  const seo = gerarSeo(dados);
-  definirValor('seoTitulo', seo.titulo);
-  definirValor('seoDescricao', seo.descricao);
-  definirValor('seoSlug', seo.slug);
-}
+  function filteredPosts() { let rows = posts.slice(); const q = value('searchPosts').toLowerCase(), type = value('filterType'), category=value('filterCategory'), template=value('filterTemplate'), status = value('filterStatus'), link = value('filterLink'); if (q) rows = rows.filter(function (p) { return p.nome.toLowerCase().includes(q); }); if (type) rows = rows.filter(function (p) { return p.tipo === type; }); if(category)rows=rows.filter(function(p){return p.categoria===category;});if(template)rows=rows.filter(function(p){return p.templateId===template;}); if (status) rows = rows.filter(function (p) { return p.status === status; }); if (link) rows = rows.filter(function (p) { return link === 'yes' ? AppModels.validarUrl(p.linkDownload) : !AppModels.validarUrl(p.linkDownload); }); const sort = value('sortPosts'); rows.sort(function (a,b) { if (sort === 'name') return a.nome.localeCompare(b.nome); if (sort === 'old') return a.criadoEm.localeCompare(b.criadoEm); if (sort === 'version') return b.versao.localeCompare(a.versao, undefined, { numeric:true }); if (sort === 'update') return b.atualizadoEm.localeCompare(a.atualizadoEm); return b.criadoEm.localeCompare(a.criadoEm); }); return rows; }
+  function renderPosts() { if (!$('#postsList')) return; const rows = filteredPosts(); $('#postsList').innerHTML = rows.length ? rows.map(function (p) { const t = templates.find(function (x) { return x.id === p.templateId; }); return '<article class="item-card"><img class="item-icon" src="' + TemplateEngine.escapeHtml(p.icone) + '" alt=""><div class="item-main"><h4>' + TemplateEngine.escapeHtml(p.nome || 'Sem nome') + '</h4><p>' + p.tipo + ' · ' + TemplateEngine.escapeHtml(p.categoria || 'Sem categoria') + ' · v' + TemplateEngine.escapeHtml(p.versao || '—') + '</p><small>' + (t ? t.nome : 'Template ausente') + ' · ' + p.status + ' · ' + new Date(p.atualizadoEm).toLocaleString('pt-BR') + (AppModels.validarUrl(p.linkDownload) ? '' : ' · ⚠ link ausente/inválido') + '</small></div><div class="item-actions"><button data-post-action="edit" data-id="' + p.id + '">Editar</button><button data-post-action="quick" data-id="' + p.id + '">Atualização rápida</button><button data-post-action="copy" data-id="' + p.id + '">Copiar HTML</button><button data-post-action="export" data-id="' + p.id + '">Exportar</button><button data-post-action="duplicate" data-id="' + p.id + '">Duplicar</button><button data-post-action="history" data-id="' + p.id + '">Histórico</button><button data-post-action="delete" data-id="' + p.id + '" class="danger-link">Excluir</button></div></article>'; }).join('') : '<p class="empty">Nenhuma postagem encontrada.</p>'; }
+  async function postAction(action, id) { const p = posts.find(function (x) { return x.id === id; }); if (!p) return; if (action === 'edit') return editPost(id); if (action === 'quick') { showView('quick'); setValue('quickPost', id); renderQuickCurrent(); return; } if (action === 'copy') return copy(p.htmlGerado || generate(p,false).html); if (action === 'export') { const out = p.htmlGerado || generate(p,true).html; return download(out, p.slug + '.html', 'text/html;charset=utf-8'); } if (action === 'duplicate') { const clone = AppModels.novaPostagem(Object.assign({}, p, { id: AppModels.uuid(), nome: p.nome + ' (cópia)', status:'rascunho', criadoEm:new Date().toISOString(), atualizadoEm:new Date().toISOString() })); await AppDB.put('postagens', clone); await refresh(); toast('Postagem duplicada.'); } if (action === 'delete') confirmDialog('Excluir esta postagem e seu histórico?', async function () { await AppDB.remove('postagens', id); const history = await AppDB.historico(id); for (const h of history) await AppDB.remove('historico', h.id); await refresh(); toast('Postagem excluída.'); }, 'Excluir'); if (action === 'history') showHistory(p); }
+  async function showHistory(post) { const rows = await AppDB.historico(post.id); dialog('<h3>Histórico — ' + TemplateEngine.escapeHtml(post.nome) + '</h3>' + (rows.length ? rows.map(function (h) { return '<div class="history-row"><strong>' + TemplateEngine.escapeHtml(h.tipo) + ' · v' + TemplateEngine.escapeHtml(h.versao || '—') + '</strong><small>' + new Date(h.criadoEm).toLocaleString('pt-BR') + '</small><div class="btn-group"><button type="button" data-history-copy="' + h.id + '">Copiar HTML</button><button type="button" data-history-compare="' + h.id + '">Comparar</button><button type="button" data-history-restore="' + h.id + '">Restaurar</button></div></div>'; }).join('') : '<p>Sem alterações registradas.</p>')); $$('[data-history-copy]').forEach(function (b) { b.onclick = function () { const h=rows.find(function(x){return x.id===b.dataset.historyCopy;}); copy(h.htmlAnterior); }; }); $$('[data-history-compare]').forEach(function (b) { b.onclick = function () { const h=rows.find(function(x){return x.id===b.dataset.historyCompare;}); dialog('<h3>Comparação</h3><pre class="diff">' + TemplateEngine.escapeHtml(JSON.stringify({ anterior:h.valoresAnteriores, novo:h.valoresNovos }, null, 2)) + '</pre>'); }; }); $$('[data-history-restore]').forEach(function (b) { b.onclick = function () { const h=rows.find(function(x){return x.id===b.dataset.historyRestore;}); confirmDialog('Restaurar esta versão? O estado atual será preservado no histórico.', async function () { const now=posts.find(function(x){return x.id===post.id;}); const restored=Object.assign({},h.valoresAnteriores,{id:post.id,atualizadoEm:new Date().toISOString()}); await addHistory(now,restored,'restauração'); await AppDB.put('postagens',restored); await refresh(); toast('Versão restaurada.'); }, 'Restaurar'); }; }); }
 
-function atualizarContador(texto) {
-  const el = document.getElementById('charCount');
-  if (el) el.textContent = texto.length + ' caracteres';
-}
+  function renderQuickSelect() { $('#quickPost').innerHTML = '<option value="">Selecione...</option>' + posts.map(function (p) { return '<option value="' + p.id + '">' + TemplateEngine.escapeHtml(p.nome) + ' — v' + TemplateEngine.escapeHtml(p.versao) + '</option>'; }).join(''); }
+  function renderQuickCurrent() { const p=posts.find(function(x){return x.id===value('quickPost');}); $('#quickCurrent').innerHTML=p?'<strong>Atual:</strong> versão '+TemplateEngine.escapeHtml(p.versao)+' · '+TemplateEngine.escapeHtml(p.dataAtualizacao)+'<br>Link: '+TemplateEngine.escapeHtml(p.linkDownload||'não informado'):''; if(p){setValue('quickVersion',p.versao);setValue('quickLink',p.linkDownload);setValue('quickDate',new Date().toLocaleDateString('pt-BR'));} }
+  async function quickUpdate() { const old=posts.find(function(x){return x.id===value('quickPost');}); if(!old) throw new Error('Selecione uma postagem.'); const version=value('quickVersion'), link=value('quickLink'), date=value('quickDate'); if(!version||!link||!date) throw new Error('Versão, link e data são obrigatórios.'); $('#quickSummary').innerHTML='<strong>Resumo</strong><p>Versão: '+TemplateEngine.escapeHtml(old.versao)+' → '+TemplateEngine.escapeHtml(version)+'</p><p>Data: '+TemplateEngine.escapeHtml(old.dataAtualizacao)+' → '+TemplateEngine.escapeHtml(date)+'</p><p>Link: '+TemplateEngine.escapeHtml(old.linkDownload||'vazio')+' → '+TemplateEngine.escapeHtml(link)+'</p>'; confirmDialog('Confirmar a atualização rápida apresentada?', async function(){ const next=Object.assign({},old,{versao:version,linkDownload:link,dataAtualizacao:date,atualizadoEm:new Date().toISOString(),tamanhoArquivo:value('quickSize')||old.tamanhoArquivo,avaliacao:value('quickRating')||old.avaliacao,sistema:value('quickSystem')||old.sistema,novidadesVersao:value('quickNews')||old.novidadesVersao}); if(value('quickMod'))next.mod=value('quickMod'); if(value('quickFilename')){next.nomeArquivo=value('quickFilename');next.nomeArquivoAutomatico=false;} AppModels.atualizarAutomaticos(next,old); next.htmlGerado=generate(next,true).html; await addHistory(old,next,'atualização rápida'); await AppDB.put('postagens',next); await refresh(); toast('Atualização rápida concluída. Versão anterior salva no histórico.'); },'Atualizar'); }
 
-function atualizarSaida(html) {
-  const codeEl = document.getElementById('htmlCode');
-  if (codeEl) {
-    codeEl.innerHTML = aplicarSyntaxHighlight(escaparHtml(html));
+  function renderTemplates(){ $('#templatesList').innerHTML=templates.map(function(t){const r=TemplateEngine.analisar(t.conteudo);return '<article class="item-card"><div class="item-main"><h4>'+TemplateEngine.escapeHtml(t.nome)+(t.padrao?' <span class="badge">Padrão</span>':'')+'</h4><p>'+t.tipo+' · '+(t.ativo?'Ativo':'Inativo')+'</p><small>'+(r.ausentes.length?'⚠ Ausentes: '+r.ausentes.join(', '):'Variáveis obrigatórias presentes')+'</small></div><div class="item-actions"><button data-template-action="edit" data-id="'+t.id+'">Editar</button><button data-template-action="preview" data-id="'+t.id+'">Visualizar</button><button data-template-action="duplicate" data-id="'+t.id+'">Duplicar</button><button data-template-action="export" data-id="'+t.id+'">Exportar</button><button data-template-action="default" data-id="'+t.id+'">Definir padrão</button><button data-template-action="toggle" data-id="'+t.id+'">'+(t.ativo?'Desativar':'Ativar')+'</button><button data-template-action="delete" data-id="'+t.id+'">Excluir</button></div></article>';}).join(''); }
+  function templateEditor(t){const item=t||{id:AppModels.uuid(),nome:'',descricao:'',tipo:'Universal',conteudo:'',ativo:true,padrao:false,criadoEm:new Date().toISOString()};dialog('<h3>'+(t?'Editar':'Novo')+' template</h3><label>Nome<input id="tplName" value="'+TemplateEngine.escapeHtml(item.nome)+'"></label><label>Descrição<input id="tplDescription" value="'+TemplateEngine.escapeHtml(item.descricao)+'"></label><label>Tipo<select id="tplType"><option>Universal</option><option>Jogo</option><option>Aplicativo</option></select></label><label>HTML completo<textarea id="tplContent" rows="18">'+TemplateEngine.escapeHtml(item.conteudo)+'</textarea></label><div id="tplReport"></div><button type="button" id="tplSave" class="btn btn-primary">Salvar template</button>');setValue('tplType',item.tipo);function report(){const r=TemplateEngine.analisar(value('tplContent'));$('#tplReport').innerHTML='<p><strong>Encontradas:</strong> '+(r.encontradas.join(', ')||'nenhuma')+'</p><p><strong>Ausentes:</strong> '+(r.ausentes.join(', ')||'nenhuma')+'</p><p><strong>Desconhecidas:</strong> '+(r.desconhecidas.join(', ')||'nenhuma')+'</p>';}$('#tplContent').oninput=report;report();$('#tplSave').onclick=async function(){if(!value('tplName')||!value('tplContent'))return toast('Nome e conteúdo são obrigatórios.','error');const saved=Object.assign({},item,{nome:value('tplName'),descricao:value('tplDescription'),tipo:value('tplType'),conteudo:value('tplContent'),atualizadoEm:new Date().toISOString()});await AppDB.put('templates',saved);$('#appDialog').close();await refresh();toast('Template salvo.');};}
+  async function templateAction(action,id){const t=templates.find(function(x){return x.id===id;});if(!t)return;if(action==='edit')return templateEditor(t);if(action==='preview')return dialog('<h3>'+TemplateEngine.escapeHtml(t.nome)+'</h3><iframe class="dialog-preview" sandbox="" srcdoc="'+TemplateEngine.escapeHtml(TemplateEngine.render(t.conteudo,templateData(current)))+'"></iframe>');if(action==='export')return download(JSON.stringify(t,null,2),AppModels.slugify(t.nome)+'.template.json','application/json');if(action==='duplicate'){await AppDB.put('templates',Object.assign({},t,{id:AppModels.uuid(),nome:t.nome+' (cópia)',padrao:false,protegido:false,criadoEm:new Date().toISOString(),atualizadoEm:new Date().toISOString()}));await refresh();toast('Template duplicado.');}if(action==='default'){const r=TemplateEngine.analisar(t.conteudo);if(r.ausentes.length)throw new Error('Não pode ser padrão. Faltam: '+r.ausentes.join(', '));for(const x of templates)await AppDB.put('templates',Object.assign({},x,{padrao:x.id===id}));await refresh();toast('Template padrão alterado.');}if(action==='toggle'){if(t.padrao&&t.ativo)throw new Error('Defina outro template padrão antes de desativar este.');await AppDB.put('templates',Object.assign({},t,{ativo:!t.ativo,atualizadoEm:new Date().toISOString()}));await refresh();}if(action==='delete'){if(templates.length===1)throw new Error('Não é possível excluir o único template.');if(t.protegido)throw new Error('O Template APK Padrão é protegido e não pode ser excluído.');if(t.padrao)throw new Error('Defina outro template padrão antes de excluir este.');confirmDialog('Excluir o template? Postagens vinculadas manterão seus dados, mas precisarão de outro template.',async function(){await AppDB.remove('templates',id);await refresh();toast('Template excluído.');},'Excluir');}}
+
+  function renderLocks(){ $$('.lock').forEach(function(el){const locked=current.camposProtegidos.includes(el.dataset.lock);el.textContent=locked?'🔒':'🔓';el.title=locked?'Desbloquear campo':'Bloquear contra importações';}); }
+  function syncAutoButtons(){ $$('.auto-toggle').forEach(function(b){b.textContent=current[b.dataset.auto]===false?'Personalizado · tornar automático':'Automático';}); }
+  function applyImported(data){Object.keys(data).forEach(function(key){const protectedKey=key==='descricao'?'descricaoHtml':key;if(!current.camposProtegidos.includes(protectedKey)&&data[key]){if(key==='descricao')current.descricaoHtml=data[key];else if(/^screenshot\d$/.test(key)){const i=Number(key.slice(-1))-1;current.screenshots[i]=data[key];}else current[key]=data[key];}});current.urlFonte=value('urlImportacao');toForm(current);toast('Dados importados. Revise os campos antes de salvar.');}
+  function showView(name){$$('.view').forEach(function(v){v.classList.toggle('active',v.id==='view-'+name);});$$('.nav-item').forEach(function(n){n.classList.toggle('active',n.dataset.view===name);});const titles={editor:'Nova postagem',library:'Postagens salvas',quick:'Atualização rápida',templates:'Templates',legacy:'Importar HTML',backup:'Backup'};$('#pageTitle').textContent=titles[name]||'Gerador Blogger';if(name==='library')renderPosts();}
+
+  function bind(){
+    $$('[data-view]').forEach(function(b){b.onclick=function(){showView(b.dataset.view);if(b.dataset.anchor)setTimeout(function(){$('#'+b.dataset.anchor)?.scrollIntoView();},0);};});$$('[data-action="new-template"]').forEach(function(b){b.onclick=function(){showView('templates');templateEditor();};});
+    fields.forEach(function(id){const el=$('#'+id);if(el)el.addEventListener('input',function(){if(id==='tituloSeo')current.seoTituloAutomatico=false;if(id==='metaDescription')current.seoDescricaoAutomatica=false;if(id==='nomeArquivo')current.nomeArquivoAutomatico=false;current=fromForm();if(id!=='tituloSeo'&&current.seoTituloAutomatico)setValue('tituloSeo',current.tituloSeo);if(id!=='metaDescription'&&current.seoDescricaoAutomatica)setValue('metaDescription',current.metaDescription);if(id!=='nomeArquivo'&&current.nomeArquivoAutomatico)setValue('nomeArquivo',current.nomeArquivo);if(!value('slug')||id==='nome')setValue('slug',current.slug);syncAutoButtons();schedulePreview();});});$('#templateId').onchange=function(){updateTemplateHelp();toast('Os dados foram mantidos. Apenas o HTML será gerado com o novo template.');schedulePreview();};
+    $$('.lock').forEach(function(el){el.onclick=function(){const key=el.dataset.lock;current.camposProtegidos=current.camposProtegidos.includes(key)?current.camposProtegidos.filter(function(x){return x!==key;}):current.camposProtegidos.concat(key);renderLocks();};});$$('.auto-toggle').forEach(function(b){b.onclick=function(e){e.preventDefault();current[b.dataset.auto]=true;current=AppModels.atualizarAutomaticos(fromForm(),current);toForm(current);};});
+    $('#btnImportar').onclick=function(){operation(async function(){const url=value('urlImportacao');if(!url)throw new Error('Informe uma URL.');const button=$('#btnImportar'),original=button.textContent;button.textContent='Importando...';try{applyImported(await importarDados(url));}finally{button.textContent=original;}});};$('#btnDraft').onclick=function(){operation(function(){return save('rascunho',false);});};$('#btnSaveGenerate').onclick=function(){operation(function(){return save('pronto',true);});};$('#btnUpdate').onclick=function(){operation(function(){return save(current.status||'rascunho',current.status==='pronto');});};$('#btnDuplicate').onclick=function(){current=AppModels.novaPostagem(Object.assign({},fromForm(),{id:AppModels.uuid(),nome:value('nome')+' (cópia)',status:'rascunho',criadoEm:new Date().toISOString()}));toForm(current);toast('Cópia criada. Salve para adicioná-la à biblioteca.');};$('#btnClear').onclick=newPost;
+    $('#btnGenerate').onclick=function(){operation(async function(){generate(fromForm(),true);toast('HTML gerado com sucesso.');});};$('#btnCopy').onclick=function(){operation(async function(){if(!html)generate(fromForm(),true);await copy(html);});};$('#btnExport').onclick=function(){operation(async function(){const d=fromForm();generate(d,true);download(html,(d.slug||'postagem')+'.html','text/html;charset=utf-8');});};
+    $$('.device-switch button').forEach(function(b){b.onclick=function(){ $$('.device-switch button').forEach(function(x){x.classList.remove('active');});b.classList.add('active');$('#previewFrame').className=b.dataset.device;};});['searchPosts','filterType','filterCategory','filterTemplate','filterStatus','filterLink','sortPosts'].forEach(function(id){$('#'+id).addEventListener('input',renderPosts);});$('#postsList').onclick=function(e){const b=e.target.closest('[data-post-action]');if(b)operation(function(){return postAction(b.dataset.postAction,b.dataset.id);});};$('#templatesList').onclick=function(e){const b=e.target.closest('[data-template-action]');if(b)operation(function(){return templateAction(b.dataset.templateAction,b.dataset.id);});};$('#templateFile').onchange=function(){operation(async function(){const file=$('#templateFile').files[0];if(!file)return;const imported=JSON.parse(await file.text());if(!imported.nome||!imported.conteudo)throw new Error('Arquivo de template inválido.');const item=Object.assign({},imported,{id:AppModels.uuid(),padrao:false,protegido:false,criadoEm:new Date().toISOString(),atualizadoEm:new Date().toISOString()});await AppDB.put('templates',item);await refresh();toast('Template importado.');});};$('#quickPost').onchange=renderQuickCurrent;$('#btnQuick').onclick=function(){operation(quickUpdate);};
+    $('#btnAnalyzeLegacy').onclick=function(){const result=LegacyImporter.analisar(value('legacyHtml'));current=result.data;toForm(current);$('#legacyReview').innerHTML='<div class="validation '+(result.faltantes.length?'warnings':'ok')+'">'+(result.faltantes.length?'Não identificados: '+result.faltantes.join(', '):'Campos principais identificados.')+' O HTML original foi preservado no registro.</div><button id="legacyEdit" class="btn btn-primary">Revisar no formulário</button>';$('#legacyEdit').onclick=function(){showView('editor');};};
+    $('#btnBackup').onclick=function(){operation(async function(){download(JSON.stringify(await AppDB.exportar(),null,2),'gerador-blogger-backup-'+new Date().toISOString().slice(0,10)+'.json','application/json');toast('Backup exportado.');});};$('#backupFile').onchange=function(){operation(async function(){const file=$('#backupFile').files[0];if(!file)return;const data=JSON.parse(await file.text());AppDB.validarBackup(data);confirmDialog('Restaurar este backup? Registros com os mesmos IDs serão atualizados; os demais serão preservados.',async function(){await AppDB.importar(data);await refresh();toast('Backup restaurado com sucesso.');},'Restaurar');});};
   }
-  atualizarContador(html);
-}
-
-function atualizarTudo() {
-  const dados = obterDadosFormulario();
-  atualizarPreview(dados);
-  atualizarSeo(dados);
-}
-
-function copiarTexto(texto) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    return navigator.clipboard.writeText(texto);
-  }
-  const ta = document.createElement('textarea');
-  ta.value = texto;
-  ta.style.position = 'fixed';
-  ta.style.left = '-9999px';
-  document.body.appendChild(ta);
-  ta.select();
-  document.execCommand('copy');
-  document.body.removeChild(ta);
-  return Promise.resolve();
-}
-
-function mostrarStatus(mensagem, tipo) {
-  const el = document.getElementById('importStatus');
-  if (!el) return;
-  el.textContent = mensagem;
-  el.className = 'status-message show ' + (tipo || '');
-}
-
-function limparStatus() {
-  const el = document.getElementById('importStatus');
-  if (el) el.className = 'status-message';
-}
-
-let htmlGerado = '';
-
-function handleGerarHtml() {
-  const dados = obterDadosFormulario();
-  htmlGerado = gerarHtmlBlogger(dados);
-  if (!htmlGerado) {
-    mostrarStatus('Aguarde o carregamento do template...', 'loading');
-    carregarTemplate().then(function () {
-      htmlGerado = gerarHtmlBlogger(dados);
-      atualizarSaida(htmlGerado);
-      mostrarStatus('HTML gerado com sucesso!', 'success');
-      setTimeout(limparStatus, 3000);
-    }).catch(function (err) {
-      mostrarStatus('Erro: ' + err.message, 'error');
-    });
-    return;
-  }
-  atualizarSaida(htmlGerado);
-  mostrarStatus('HTML gerado com sucesso!', 'success');
-  setTimeout(limparStatus, 3000);
-}
-
-function handleCopiarHtml() {
-  if (!htmlGerado) {
-    const dados = obterDadosFormulario();
-    htmlGerado = gerarHtmlBlogger(dados);
-  }
-  copiarTexto(htmlGerado).then(function () {
-    mostrarStatus('HTML copiado para a área de transferência!', 'success');
-    setTimeout(limparStatus, 3000);
-  });
-}
-
-function handleCopiarSeo() {
-  const dados = obterDadosFormulario();
-  const seo = gerarSeo(dados);
-  const texto = 'Título: ' + seo.titulo + '\nSlug: ' + seo.slug + '\nDescrição: ' + seo.descricao;
-  copiarTexto(texto).then(function () {
-    mostrarStatus('SEO copiado para a área de transferência!', 'success');
-    setTimeout(limparStatus, 3000);
-  });
-}
-
-function handleExportarHtml() {
-  if (!htmlGerado) {
-    const dados = obterDadosFormulario();
-    htmlGerado = gerarHtmlBlogger(dados);
-  }
-  const blob = new Blob([htmlGerado], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (obterValor('nome') || 'postagem').replace(/\s+/g, '-').toLowerCase() + '.html';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function handleExportarTxt() {
-  if (!htmlGerado) {
-    const dados = obterDadosFormulario();
-    htmlGerado = gerarHtmlBlogger(dados);
-  }
-  const blob = new Blob([htmlGerado], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (obterValor('nome') || 'postagem').replace(/\s+/g, '-').toLowerCase() + '.txt';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function handleLimpar() {
-  campos.forEach(function (campo) {
-    definirValor(campo, '');
-  });
-  definirValor('tipo', 'Aplicativo');
-  definirValor('urlImportacao', '');
-  htmlGerado = '';
-  atualizarTudo();
-  atualizarSaida('');
-  limparStatus();
-}
-
-async function handleImportar() {
-  const url = obterValor('urlImportacao');
-  if (!url) {
-    mostrarStatus('Cole uma URL válida antes de importar.', 'error');
-    return;
-  }
-  mostrarStatus('Importando dados...', 'loading');
-  try {
-    await carregarTemplate();
-    const dados = await importarDados(url);
-    preencherFormulario(dados);
-    atualizarTudo();
-    const dadosAtual = obterDadosFormulario();
-    htmlGerado = gerarHtmlBlogger(dadosAtual);
-    atualizarSaida(htmlGerado);
-    mostrarStatus('Dados importados com sucesso! Preencha Mod, Recursos do Mod e Link Download.', 'success');
-  } catch (err) {
-    mostrarStatus('Erro ao importar: ' + err.message, 'error');
-  }
-}
-
-async function handleImportarGooglePlay() {
-  const url = obterValor('urlImportacao');
-  if (!url) {
-    mostrarStatus('Cole uma URL da Google Play antes de importar.', 'error');
-    return;
-  }
-  if (!url.includes('play.google.com')) {
-    mostrarStatus('Esta função requer uma URL da Google Play.', 'error');
-    return;
-  }
-  mostrarStatus('Importando da Google Play...', 'loading');
-  try {
-    await carregarTemplate();
-    const dados = await importarGooglePlay(url);
-    preencherFormulario(dados);
-    atualizarTudo();
-    const dadosAtual = obterDadosFormulario();
-    htmlGerado = gerarHtmlBlogger(dadosAtual);
-    atualizarSaida(htmlGerado);
-    mostrarStatus('Dados importados da Google Play! Preencha Mod, Recursos do Mod e Link Download.', 'success');
-  } catch (err) {
-    mostrarStatus('Erro ao importar: ' + err.message, 'error');
-  }
-}
-
-function preencherFormulario(dados) {
-  if (dados.nome) definirValor('nome', dados.nome);
-  if (dados.icone) definirValor('icone', dados.icone);
-  if (dados.categoria) definirValor('categoria', dados.categoria);
-  if (dados.avaliacao) definirValor('avaliacao', dados.avaliacao);
-  if (dados.versao) definirValor('versao', dados.versao);
-  if (dados.sistema) definirValor('sistema', dados.sistema);
-  if (dados.atualizacao) definirValor('atualizacao', dados.atualizacao);
-  if (dados.descricao) definirValor('descricao', dados.descricao);
-  if (dados.screenshot1) definirValor('screenshot1', dados.screenshot1);
-  if (dados.screenshot2) definirValor('screenshot2', dados.screenshot2);
-  if (dados.screenshot3) definirValor('screenshot3', dados.screenshot3);
-  if (dados.tipo) definirValor('tipo', dados.tipo);
-  if (dados.mod) definirValor('mod', dados.mod);
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  carregarTemplate().catch(function () {});
-
-  campos.forEach(function (campo) {
-    const el = document.getElementById(campo);
-    if (el) {
-      el.addEventListener('input', atualizarTudo);
-      el.addEventListener('change', atualizarTudo);
-    }
-  });
-
-  document.getElementById('btnGerar').addEventListener('click', handleGerarHtml);
-  document.getElementById('btnCopiarHtml').addEventListener('click', handleCopiarHtml);
-  document.getElementById('btnCopiarSeo').addEventListener('click', handleCopiarSeo);
-  document.getElementById('btnCopiarOutput').addEventListener('click', handleCopiarHtml);
-  document.getElementById('btnExportarHtml').addEventListener('click', handleExportarHtml);
-  document.getElementById('btnExportarTxt').addEventListener('click', handleExportarTxt);
-  document.getElementById('btnLimpar').addEventListener('click', handleLimpar);
-  document.getElementById('btnImportar').addEventListener('click', handleImportar);
-  document.getElementById('btnImportarGooglePlay').addEventListener('click', handleImportarGooglePlay);
-
-  atualizarTudo();
-});
+  async function init(){try{await AppDB.open();await ensureDefaultTemplateSafe();await refresh();bind();newPost();}catch(e){console.error(e);toast('Falha ao iniciar: '+e.message,'error');}}
+  document.addEventListener('DOMContentLoaded',init);
+})();
