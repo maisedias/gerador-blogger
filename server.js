@@ -1,5 +1,5 @@
 const http=require('http'),fs=require('fs'),path=require('path');
-const root=__dirname,port=Number(process.env.PORT)||4173;
+const root=__dirname,port=Number(process.argv[2])||Number(process.env.PORT)||4173;
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8'};
 function send(res,status,headers,body){res.writeHead(status,Object.assign({'Cache-Control':'no-store'},headers||{}));res.end(body||'');}
 async function runFunction(req,res,parsed){const name=parsed.pathname.split('/').pop();if(!/^[a-z0-9_-]+$/i.test(name))return send(res,400,{},'Função inválida.');const file=path.join(root,'netlify','functions',name+'.js');if(!fs.existsSync(file))return send(res,404,{},'Função não encontrada.');try{const queryStringParameters={};parsed.searchParams.forEach(function(value,key){queryStringParameters[key]=value;});const result=await require(file).handler({httpMethod:req.method,headers:req.headers,queryStringParameters});send(res,result.statusCode||200,result.headers,result.body);}catch(error){console.error(error);send(res,500,{'Content-Type':'application/json; charset=utf-8'},JSON.stringify({error:'Erro interno ao executar a importação.'}));}}
